@@ -1,39 +1,90 @@
 """
-LLM prompt templates
+LLM prompt templates for Asset Information Extraction System
 """
 
-EXTRACTION_PROMPT = """You are a product information extraction assistant. Based on the search results provided, 
-extract structured information about the product.
+EXTRACTION_PROMPT = """You are an AI assistant specialized in extracting structured asset information from web search results.
 
-Search Results Context:
+CONTEXT:
+You will receive:
+1. Search results from Google containing product information
+2. Original input query details
+
+TASK:
+Extract accurate product information and return ONLY a valid JSON object.
+
+SEARCH RESULTS CONTEXT:
 {context}
 
-Original Input:
+ORIGINAL INPUT:
 - Model Number: {model_number}
 - Asset Classification: {asset_classification}
 - Manufacturer (if known): {manufacturer}
 
-Extract the following fields from the search results:
-1. asset_classification: The standardized asset classification name (clean up the input classification)
-2. manufacturer: The product manufacturer
-3. model_number: The model number (confirm or correct if different from input)
-4. product_line: The product line or series name
-5. summary: A brief 2-3 sentence summary of the product
+REQUIRED OUTPUT FIELDS:
+1. asset_classification: Standardized asset type (clean up the input classification)
+   - Remove extra words like "Emissions/UREA/DPF Systems" if present
+   - Example: "Generator (Marine)" → "Marine Generator"
 
-Rules:
-- If information is not available in the context, leave the field empty
-- Ensure the summary is factual and based only on the provided context
-- Return ONLY a valid JSON object with these exact keys
-- Do not include any explanatory text before or after the JSON
+2. manufacturer: The product manufacturer name
+   - Extract from search results if not in input
+   - Use official company name
 
-Example Output:
+3. model_number: The model number
+   - Confirm if matches input
+   - Correct if search shows different format
+
+4. product_line: The product series/line name
+   - Example: "Onan", "Cat 320 Series", "QSM Series"
+
+5. summary: 2-3 sentence product description
+   - MUST be based ONLY on search results
+   - Include key specifications (power, capacity, etc.)
+   - Natural language, not keyword stuffing
+   - Do NOT copy-paste search snippets
+
+RULES:
+- If information not found → leave field EMPTY (never invent)
+- If manufacturer not in search results → use input manufacturer
+- Return ONLY valid JSON - no explanations, no markdown
+- Ensure summary is factual and coherent
+
+OUTPUT FORMAT (STRICT JSON):
+{{
+    "asset_classification": "string",
+    "manufacturer": "string",
+    "model_number": "string",
+    "product_line": "string",
+    "summary": "string"
+}}
+
+EXAMPLES:
+
+Good Output (Complete):
 {{
     "asset_classification": "Marine Generator",
     "manufacturer": "Cummins",
     "model_number": "MRN85HD",
     "product_line": "Onan",
-    "summary": "The Cummins MRN85HD is a marine diesel generator set providing reliable power for maritime applications."
+    "summary": "The Cummins MRN85HD is a 85kW marine diesel generator set featuring a compact design and reliable power output for maritime applications. It meets EPA Tier 3 emissions standards and includes digital controls for easy monitoring."
 }}
 
-Now, extract the information:
+Good Output (Partial):
+{{
+    "asset_classification": "Hydraulic Excavator",
+    "manufacturer": "Caterpillar",
+    "model_number": "320D2",
+    "product_line": "",
+    "summary": "The Cat 320D2 hydraulic excavator delivers 123 hp and features an advanced hydraulic system for precise control in construction applications."
+}}
+
+BAD Output (Don't do this):
+{{
+    "asset_classification": "Generator",
+    "manufacturer": "Company",
+    "model_number": "123",
+    "product_line": "Series",
+    "summary": "This is a good product."  // Too vague, no specs
+}}
+
+Now, analyze the search results and extract the information:
 """

@@ -12,6 +12,7 @@ class AssetResponse(BaseModel):
     summary: str = Field(..., description="Product summary")
     
     class Config:
+        protected_namespaces = ()
         json_schema_extra = {
             "example": {
                 "asset_classification": "Marine Generator",
