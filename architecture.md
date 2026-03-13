@@ -43,6 +43,5 @@ This system extracts structured product information from web searches using AI/L
 - Comprehensive logging
 
 ## Deployment
-- Docker containerization
 - Environment-based configuration
 - Health checks for monitoring
